@@ -6,14 +6,14 @@ package Client;
 //
 ///////////////////////////////////////////
 /**
-    Set ipAddress with "localhost" or preferred ipAddresses
-    Set nLaps to desired number of laps
-**/
+ Set ipAddress with "localhost" or preferred ipAddresses
+ Set nLaps to desired number of laps
+ **/
 ///////////////////////////////////////////
 public class Main {
 
 
-    static String ipAddress = "localhost";
+    static String ipAddress = "26.210.145.27";
     static int nLaps=1;
 
 

@@ -79,6 +79,17 @@ public class Panel extends JPanel implements KeyListener {
     private void update() {
     }
 
+    // Método para o GameClient conseguir pegar o carro pelo número do jogador
+    public Car getCar(int pNum) {
+        // Se o número for 1, retorna o carro 1, se for 2, retorna o carro 2.
+        if (pNum == 1) {
+            return redCar;
+        } else if (pNum == 2) {
+            return blueCar;
+        }
+        return null;
+    }
+
     public synchronized void sendUpdate(){
         if (pNum == 1) {
             Packet02Move packet = new Packet02Move(redCar.getpNum(), redCar.getPositionX(), redCar.getPositionY(), redCar.getDirection(), redCar.getSpeed(), redCar.getAlert(), redCar.getStatus(), redCar.isReady());
@@ -511,7 +522,7 @@ public class Panel extends JPanel implements KeyListener {
             remove(fpsLabel);
             sendUpdate();
             if(match.isFinished()) {
-                 restart();
+                restart();
             }
             //match.saveMatch();
 

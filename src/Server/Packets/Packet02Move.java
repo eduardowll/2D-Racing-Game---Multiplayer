@@ -19,6 +19,8 @@ public class Packet02Move extends Packet{
     private String status;
     private boolean isReady;
 
+    private long timestamp;
+
     public Packet02Move(byte[] data) {
         super(02);
         String[] dataArray = readData(data).split(",");
@@ -34,7 +36,7 @@ public class Packet02Move extends Packet{
         }else{
             this.isReady=true;
         }
-
+        this.timestamp = Long.parseLong(dataArray[8]);
 
     }
 
@@ -48,6 +50,8 @@ public class Packet02Move extends Packet{
         this.alert = alert;
         this.status = status;
         this.isReady = isReady;
+
+        this.timestamp = System.currentTimeMillis();
     }
 
     @Override
@@ -64,7 +68,7 @@ public class Packet02Move extends Packet{
     public byte[] getData() {
         return ("02" + this.pNum + "," + this.x + "," + this.y +
                 "," + this.direction + "," + this.speed +"," +
-                this.alert + "," + this.status+ "," + isReady).getBytes();
+                this.alert + "," + this.status+ "," + isReady + "," + this.timestamp).getBytes();
 
     }
 
@@ -96,6 +100,10 @@ public class Packet02Move extends Packet{
     }
     public boolean isReady() {
         return this.isReady;
+    }
+
+    public long getTimestamp() {
+        return this.timestamp;
     }
 
 

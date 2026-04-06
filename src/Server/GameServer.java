@@ -22,6 +22,7 @@ public class GameServer extends Thread  {
     private DatagramSocket socket;
     private Panel panel; // may be changed look what game is
 
+
     private int socket_port = 5000;
 
 
