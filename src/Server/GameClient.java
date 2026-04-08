@@ -9,11 +9,6 @@ import Server.Packets.Packet02Move;
 
 import java.io.IOException;
 import java.net.*;
-///////////////////////////////////////////
-//
-//  Sid: 1955004
-//
-///////////////////////////////////////////
 
 public class GameClient extends Thread{
 
@@ -44,9 +39,6 @@ public class GameClient extends Thread{
             }
 
             this.parsePacket(packet.getData(), packet.getAddress(),packet.getPort());
-            /*String message = new String(packet.getData());
-            System.out.println("SERVER > "+message);*/
-
         }
     }
     private void parsePacket(byte[] data, InetAddress address, int socket_port){
@@ -63,12 +55,11 @@ public class GameClient extends Thread{
                 break;
             case DISCONNECT:
                 packet = new Packet01Disconnect(data);
-                System.out.println("Player: "+((Packet01Disconnect)packet).getpNum()+" has left, couldn't handle the challenge...");
+                System.out.println("Player: "+((Packet01Disconnect)packet).getpNum()+" has left, couldn\'t handle the challenge...");
                 break;
             case MOVE:
                 packet = new Packet02Move(data);
                 handleMove((Packet02Move) packet);
-                //System.out.println("Player: "+ ((Packet02Move)packet).getpNum()+" sent "+(Packet02Move) packet);
         }
     }
     public void sendData (byte[] data){
@@ -91,24 +82,16 @@ public class GameClient extends Thread{
         long atraso = tempoChegada - packet.getTimestamp();
         System.out.println("Atraso (Ping) do jogador " + packet.getpNum() + ": " + atraso + " ms");
 
-        // 2. Pega o carro adversário no Panel
         CarMP enemyCar = (CarMP) this.panel.getCar(packet.getpNum());
 
-        // 3. Se o carro existir, atualiza o alvo dele e os status
         if (enemyCar != null) {
-            // Define o ALVO para a interpolação atuar suavemente
             enemyCar.updateTarget(packet.getX(), packet.getY());
-
-            // Atualiza a direção e a velocidade para a extrapolação continuar prevendo o movimento
             enemyCar.setDirection(packet.getDirection());
             enemyCar.setSpeed(packet.getSpeed());
-
-            // Atualiza os outros status normais
             enemyCar.setAlert(packet.getAlert());
             enemyCar.setStatus(packet.getStatus());
             enemyCar.setReady(packet.isReady());
         }
     }
-
 
 }

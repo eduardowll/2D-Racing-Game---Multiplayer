@@ -8,16 +8,20 @@ package Client;
 
 import java.net.InetAddress;
 
-public class CarMP extends Car{
+public class CarMP extends Car {
     public InetAddress ipAddress;
     public int socketPort;
-    private int targetX, targetY; // A posição que veio do servidor
-    private float interpolationFactor = 0.1f; // O quão suave será o deslize (0.1 a 0.5)
 
-    //multiplayer car class
-    public CarMP(int PNum,InetAddress ipAddress, int socketPort) {
+    private int targetX;
+    private int targetY;
+    private float suavizacao = 0.2f;
+
+    // NOVA VARIÁVEL: Diz se o carro é seu ou do adversário
+    public boolean isLocal = false;
+
+    public CarMP(int PNum, InetAddress ipAddress, int socketPort) {
         super(PNum);
-        this.ipAddress=ipAddress;
+        this.ipAddress = ipAddress;
         this.socketPort = socketPort;
         this.targetX = getPositionX();
         this.targetY = getPositionY();
@@ -30,14 +34,14 @@ public class CarMP extends Car{
 
     @Override
     public void animate() {
-        // 1. EXTRAPOLAÇÃO: Rodamos o animate original do Car.java.
         super.animate();
 
-        // 2. INTERPOLAÇÃO: Corrigimos a posição suavemente em direção ao alvo real do servidor.
-        int difX = targetX - getPositionX();
-        int difY = targetY - getPositionY();
-
-        this.setPositionX(getPositionX() + (int)(difX * interpolationFactor));
-        this.setPositionY(getPositionY() + (int)(difY * interpolationFactor));
+        // SÓ FAZ A INTERPOLAÇÃO SE FOR O CARRO DO INIMIGO
+        if (!isLocal) {
+            int difX = targetX - getPositionX();
+            int difY = targetY - getPositionY();
+            this.setPositionX(getPositionX() + (int)(difX * suavizacao));
+            this.setPositionY(getPositionY() + (int)(difY * suavizacao));
+        }
     }
 }

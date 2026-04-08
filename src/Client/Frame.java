@@ -10,7 +10,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class Frame extends JFrame {
-    public Frame(String ipAddress,int nlaps){
+    public Frame(String ipAddress,int nlaps, boolean usarTCP){
         //frame settings
         setTitle("Racing Client.Karts");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -19,7 +19,7 @@ public class Frame extends JFrame {
         setLocationRelativeTo(null);
 
         //Add Client.Panel and start timer
-        Panel animation = new Panel(ipAddress,nlaps);
+        Panel animation = new Panel(ipAddress,nlaps, usarTCP);
         animation.setBackground(Color.gray);
         animation.startAnimation();
         add(animation);

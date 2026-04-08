@@ -2,6 +2,7 @@ package Server.Packets;
 
 import Server.GameClient;
 import Server.GameServer;
+import Server.GameServerTCP;
 ///////////////////////////////////////////
 //
 //  Sid: 1955004
@@ -40,5 +41,9 @@ public class Packet01Disconnect extends Packet{
 
     public int getpNum(){
         return pNum;
+    }
+
+    public void writeData(GameServerTCP gameServerTCP) {
+
     }
 }

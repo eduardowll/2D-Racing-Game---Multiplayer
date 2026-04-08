@@ -4,6 +4,8 @@ package Client;
 //  Sid: 1955004
 //
 ///////////////////////////////////////////
+import Server.GameClientTCP;
+import Server.GameServerTCP;
 import Server.Packets.Packet00Login;
 import Server.GameClient;
 import Server.GameServer;
@@ -37,6 +39,11 @@ public class Panel extends JPanel implements KeyListener {
     Match match = new Match();
     public GameClient socketClient;
     public GameServer socketServer;
+    public GameClientTCP socketClientTCP;
+    public GameServerTCP socketServerTCP;
+
+    // Variável para saber qual protocolo o usuário escolheu na Main
+    private boolean usarTCP;
 
     private int pNum;
 
@@ -44,36 +51,87 @@ public class Panel extends JPanel implements KeyListener {
         return this.pNum;
     }
 
-    public Panel(String ipAddress,int nLaps){
+    public Panel(String ipAddress, int nLaps, boolean usarTCP){
         this.nLaps = nLaps;
         setDoubleBuffered(true);
         addKeyListener(this);
+        this.usarTCP = usarTCP;
         init(ipAddress);
 
+        /*
+        if (usarTCP) {
+            System.out.println("Iniciando cliente TCP...");
+            // Inicia o GameClientTCP que criamos
+            GameClientTCP clientTCP = new GameClientTCP(ipAddress, this);
+            clientTCP.start();
+        } else {
+            System.out.println("Iniciando cliente UDP...");
+            // Inicia o GameClient original (UDP)
+            GameClient clientUDP = new GameClient(ipAddress, this);
+            clientUDP.start();
+        }
+        */
     }
-    private synchronized void init(String ipAddress){
+    private synchronized void init(String ipAddress) {
         match.setLaps(nLaps);
-        if(JOptionPane.showConfirmDialog(this, "Do you want to run the server?")== 0){
-            socketServer = new GameServer(this);
-            socketServer.start();
+
+        // 1. Pergunta se o jogador quer hospedar a partida
+        boolean isServer = (JOptionPane.showConfirmDialog(this, "Do you want to run the server?") == 0);
+
+        // 2. Se for o host, liga o Servidor correto (UDP ou TCP)
+        if(isServer){
+            if (usarTCP) {
+                System.out.println("Iniciando Servidor TCP...");
+                socketServerTCP = new GameServerTCP(this);
+                socketServerTCP.start();
+            } else {
+                System.out.println("Iniciando Servidor UDP...");
+                socketServer = new GameServer(this);
+                socketServer.start();
+            }
         }
 
-        socketClient = new GameClient(ipAddress,this);
-        socketClient.start();
-
-
-        if(socketServer != null){
-            pNum=1;
-            Packet00Login loginPacket = new Packet00Login(redCar.getpNum(),redCar.getPositionX(),redCar.getPositionY());
-            socketServer.addConnection((CarMP)redCar,loginPacket);
-            loginPacket.writeData(socketClient);
-        }else {
-            pNum=2;
-            Packet00Login loginPacket = new Packet00Login(blueCar.getpNum(),blueCar.getPositionX(),blueCar.getPositionY());
-            loginPacket.writeData(socketClient);
+        // 3. Liga o Cliente correto (UDP ou TCP) - O cliente sempre liga para poder jogar!
+        if (usarTCP) {
+            System.out.println("Iniciando Cliente TCP...");
+            socketClientTCP = new GameClientTCP(ipAddress, this);
+            socketClientTCP.start();
+        } else {
+            System.out.println("Iniciando Cliente UDP...");
+            socketClient = new GameClient(ipAddress, this);
+            socketClient.start();
         }
 
+        // 4. Define se é o Player 1 (Vermelho) ou Player 2 (Azul)
+        if(isServer){
+            pNum = 1;
 
+            // AVISA QUE O CARRO VERMELHO É O SEU (Resolve o bug do carro não andar)
+            ((CarMP)redCar).isLocal = true;
+
+            Packet00Login loginPacket = new Packet00Login(redCar.getpNum(), redCar.getPositionX(), redCar.getPositionY());
+
+            if (usarTCP) {
+                socketServerTCP.addConnection((CarMP)redCar, loginPacket);
+                socketClientTCP.sendData(loginPacket.getData());
+            } else {
+                socketServer.addConnection((CarMP)redCar, loginPacket);
+                loginPacket.writeData(socketClient);
+            }
+        } else {
+            pNum = 2;
+
+            // AVISA QUE O CARRO AZUL É O SEU (Resolve o bug do carro não andar)
+            ((CarMP)blueCar).isLocal = true;
+
+            Packet00Login loginPacket = new Packet00Login(blueCar.getpNum(), blueCar.getPositionX(), blueCar.getPositionY());
+
+            if (usarTCP) {
+                socketClientTCP.sendData(loginPacket.getData());
+            } else {
+                loginPacket.writeData(socketClient);
+            }
+        }
     }
 
     private void update() {
@@ -91,12 +149,23 @@ public class Panel extends JPanel implements KeyListener {
     }
 
     public synchronized void sendUpdate(){
+        Packet02Move packet;
         if (pNum == 1) {
-            Packet02Move packet = new Packet02Move(redCar.getpNum(), redCar.getPositionX(), redCar.getPositionY(), redCar.getDirection(), redCar.getSpeed(), redCar.getAlert(), redCar.getStatus(), redCar.isReady());
-            packet.writeData(socketClient);
+            packet = new Packet02Move(redCar.getpNum(), redCar.getPositionX(), redCar.getPositionY(), redCar.getDirection(), redCar.getSpeed(), redCar.getAlert(), redCar.getStatus(), redCar.isReady());
         } else if (pNum == 2) {
-            Packet02Move packet = new Packet02Move(blueCar.getpNum(), blueCar.getPositionX(), blueCar.getPositionY(), blueCar.getDirection(), blueCar.getSpeed(), blueCar.getAlert(), blueCar.getStatus(), blueCar.isReady());
-            packet.writeData(socketClient);
+            packet = new Packet02Move(blueCar.getpNum(), blueCar.getPositionX(), blueCar.getPositionY(), blueCar.getDirection(), blueCar.getSpeed(), blueCar.getAlert(), blueCar.getStatus(), blueCar.isReady());
+        } else {
+            return; // Ou lançar uma exceção, caso pNum seja inválido
+        }
+
+        if (usarTCP) {
+            if (socketClientTCP != null) {
+                socketClientTCP.sendData(packet.getData());
+            }
+        } else {
+            if (socketClient != null) {
+                packet.writeData(socketClient);
+            }
         }
     }
 
